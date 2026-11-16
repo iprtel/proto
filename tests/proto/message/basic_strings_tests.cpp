@@ -32,11 +32,11 @@ TEST_P(BasicStringsTest, decode_message) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-BasicStringsTest, // Name der Test-Fixture-Klasse
+MyInstantiation,
+BasicStringsTest,
 ::testing::Values(
     BasicTestParam{{}, {}},
     BasicTestParam{{.text=""}, {}},
     BasicTestParam{{.text="abc"}, {0x6a, 0x03, 0x61, 0x62, 0x63}}
-) // Parameterwerte
+)
 );
