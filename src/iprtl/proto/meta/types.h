@@ -1,7 +1,11 @@
 #pragma once
-#include "fixedstring.h"
-
+#include <array>
+#include <cstdint>
 #include <functional>
+#include <variant>
+
+#include "fixedstring.h"
+#include "iprtl/proto/wire/types.h"
 
 namespace iprtl::proto::meta {
 
@@ -32,5 +36,13 @@ struct ProtoMessage {
   using cpp_type = ClassT;
   using message_type = ClassT;
   using message_fields = std::variant<ProtoFields...>;
+};
+
+// A field whose value is another message (length-delimited on the wire).
+template<typename T>
+struct nested_p {
+    using nested_type = T;
+    using cpp_type = typename T::cpp_type;
+    using wire_type = wire::len_data;
 };
 }

@@ -1,10 +1,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "iprtl/proto/encode.h"
+#include "iprtl/proto/meta/encode.h"
 #include <limits>
 
 
 using namespace iprtl::proto;
+using namespace iprtl::proto::meta;
 
 TEST(EncodeTest, encode_fixed) {
     std::array<uint8_t, 128> buffer{};

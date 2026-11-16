@@ -2,7 +2,7 @@
 
 #include "types.h"
 #include "iprtl/proto/proto_exception.h"
-#include "iprtl/proto/concepts.h"
+#include "concepts.h"
 #include "as.h"
 #include "iprtl/proto/packed_repeated_values.h"
 

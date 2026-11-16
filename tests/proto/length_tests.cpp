@@ -1,10 +1,12 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "iprtl/proto/length.h"
+#include "iprtl/proto/meta/length.h"
+#include "iprtl/proto/meta/operators.h"
 #include <limits>
 
 
 using namespace iprtl::proto;
+using namespace iprtl::proto::meta;
 
 TEST(LengthTest, length_fixed) {
     EXPECT_EQ(length<fixed32_p>(0u),4);
@@ -101,14 +103,14 @@ struct Nested {
 };
 using Proto_Nested = iprtl::proto::meta::ProtoMessage<Nested, "Nested",
     iprtl::proto::meta::ProtoField<Nested,1,iprtl::proto::sint32_p,"value",&Nested::value>>;
-inline bool operator==(const Nested& lhs, const Nested& rhs) { return iprtl::proto::operator==<Proto_Nested>(lhs, rhs); }
+inline bool operator==(const Nested& lhs, const Nested& rhs) { return iprtl::proto::meta::equal<Proto_Nested>(lhs, rhs); }
 
 struct NestedTest {
     Nested nested{};
 };
 using Proto_NestedTest = iprtl::proto::meta::ProtoMessage<NestedTest, "NestedTest",
-    iprtl::proto::meta::ProtoField<NestedTest,1,iprtl::proto::nested_p<Proto_Nested>,"nested",&NestedTest::nested>>;
-inline bool operator==(const NestedTest& lhs, const NestedTest& rhs) { return iprtl::proto::operator==<Proto_NestedTest>(lhs, rhs); }
+    iprtl::proto::meta::ProtoField<NestedTest,1,iprtl::proto::meta::nested_p<Proto_Nested>,"nested",&NestedTest::nested>>;
+inline bool operator==(const NestedTest& lhs, const NestedTest& rhs) { return iprtl::proto::meta::equal<Proto_NestedTest>(lhs, rhs); }
 
 TEST(LengthTest, length_nested_field) {
     // message Nested {

@@ -2,7 +2,6 @@
 
 #include <type_traits>
 #include "types.h"
-#include "meta/types.h"
 
 namespace iprtl::proto {
 template<typename T>
@@ -123,29 +122,5 @@ concept is_repeated_field = is_packed_p<ProtoT> || is_repeated_p<ProtoT>;
 template<typename ProtoT>
 concept is_packed_repeated = is_packed_p<ProtoT> ||
                              is_repeated_p<ProtoT> && is_packable<typename ProtoT::element_type>;
-
-
-template<typename ProtoT>
-concept is_nested_p = is_instantiation_of<ProtoT, nested_p>::value;
-
-
-template<typename>
-struct is_proto_message : std::false_type {};
-
-template<typename ClassT, meta::FixedString Name, typename ...ProtoFields>
-struct is_proto_message<meta::ProtoMessage<ClassT, Name, ProtoFields...>> : std::true_type {};
-
-template<typename ProtoT>
-concept is_proto_message_p = is_proto_message<ProtoT>::value;
-
-
-template<typename>
-struct is_proto_field : std::false_type {};
-
-template<typename ClassT, uint32_t Id, typename ProtoT, meta::FixedString Name, typename ProtoT::cpp_type ClassT::* Member, typename V>
-struct is_proto_field<meta::ProtoField<ClassT, Id, ProtoT, Name, Member, V>> : std::true_type {};
-
-template<typename ProtoT>
-concept is_proto_field_p = is_proto_field<ProtoT>::value;
 
 }

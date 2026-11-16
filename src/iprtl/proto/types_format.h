@@ -59,8 +59,4 @@ requires is_repeated_p<ProtoT> || is_packed_p<ProtoT>
 inline auto format_as(ProtoT){
     return std::string("repeated ").append(format_as<ProtoT::element_type>({}));
 }
-template<typename T>
-inline auto format_as(nested_p<T>){
-    return "nested";
-}
 }

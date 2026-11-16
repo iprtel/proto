@@ -2,8 +2,8 @@
 
 #include "set_field.h"
 #include "types.h"
-#include "iprtl/proto/support.h"
-#include "iprtl/proto/concepts.h"
+#include "field_access.h"
+#include "concepts.h"
 #include "iprtl/proto/wire/read.h"
 
 namespace iprtl::proto::meta {

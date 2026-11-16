@@ -147,7 +147,7 @@ struct Generator{
         auto found_nested = std::find_if(proto.messages.begin(), proto.messages.end(),
             [&name](const std::shared_ptr<iprtl::proto::compiler::Message>& m) { return m->name == name; });
         if (found_nested != proto.messages.end()) {
-            return "iprtl::proto::nested_p<Proto_" + name + ">";
+            return "iprtl::proto::meta::nested_p<Proto_" + name + ">";
         }
 
         return name;
@@ -209,7 +209,7 @@ struct Generator{
             fmt::print(out_file,">;\n");
 
             fmt::print(out_file,
-                "inline auto format_as({msg_name} const& v) {{return iprtl::proto::meta::format_as<{meta_msg_name}>(v);}}\n",
+                "inline auto format_as({msg_name} const& v) {{return iprtl::proto::format_message<{meta_msg_name}>(v);}}\n",
                 fmt::arg("meta_msg_name",meta_msg_name),fmt::arg("msg_name",msg->name));
             fmt::print(out_file,
                 "inline auto decode_message({msg_name} & v, std::span<const uint8_t> buffer) {{return iprtl::proto::decode_message<{meta_msg_name}>(v,buffer);}}\n",
@@ -221,9 +221,9 @@ struct Generator{
                 "inline std::vector<uint8_t> encode_message({msg_name} const& v) {{return iprtl::proto::encode_message<{meta_msg_name}>(v);}}\n",
                 fmt::arg("meta_msg_name",meta_msg_name),fmt::arg("msg_name",msg->name));
             fmt::print(out_file,
-                    "inline bool operator==(const {msg_name}& lhs, const {msg_name}& rhs) {{ return iprtl::proto::operator==<{meta_msg_name}>(lhs, rhs); }}\n", fmt::arg("msg_name",msg->name), fmt::arg("meta_msg_name",meta_msg_name));
+                    "inline bool operator==(const {msg_name}& lhs, const {msg_name}& rhs) {{ return iprtl::proto::messages_equal<{meta_msg_name}>(lhs, rhs); }}\n", fmt::arg("msg_name",msg->name), fmt::arg("meta_msg_name",meta_msg_name));
             fmt::print(out_file,
-                    "inline std::size_t encoded_length(const {msg_name}& msg) {{ return iprtl::proto::length<{meta_msg_name}>(msg); }}\n", fmt::arg("msg_name",msg->name), fmt::arg("meta_msg_name",meta_msg_name));
+                    "inline std::size_t encoded_length(const {msg_name}& msg) {{ return iprtl::proto::encoded_length<{meta_msg_name}>(msg); }}\n", fmt::arg("msg_name",msg->name), fmt::arg("meta_msg_name",meta_msg_name));
         }
         fmt::print(out_file,"}}\n");
 

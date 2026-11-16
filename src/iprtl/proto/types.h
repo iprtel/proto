@@ -98,13 +98,6 @@ struct enum_p {
     using wire_type = wire::varint;
 };
 
-template<typename T>
-struct nested_p {
-    using nested_type = T;
-    using cpp_type = typename T::cpp_type;
-    using wire_type = wire::len_data;
-};
-
 template<typename ElementType>
 struct repeated_p {
     using element_type = ElementType;

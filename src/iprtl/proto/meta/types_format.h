@@ -1,8 +1,13 @@
 #pragma once
 
 #include "types.h"
-#include "iprtl/proto/support.h"
-#include "iprtl/proto/concepts.h"
+#include <string>
+#include <variant>
+#include <vector>
+#include <fmt/format.h>
+#include <fmt/ranges.h>
+#include "field_access.h"
+#include "concepts.h"
 
 namespace iprtl::proto::meta {
 template<typename ProtoT>

@@ -4,7 +4,7 @@
 #include <optional>
 #include <variant>
 
-namespace iprtl::proto {
+namespace iprtl::proto::meta {
 template<typename AccessorVariant>
 std::optional<AccessorVariant> AccessorSelector(uint32_t field) {
         return std::nullopt;
