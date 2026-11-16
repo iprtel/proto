@@ -193,7 +193,6 @@ struct Generator{
 
         auto messages = proto.messages;
         for (const auto& msg : messages) {
-            fmt::print("Message: {}\n", msg->name);
             fmt::print(out_file,"struct {} {{\n",msg->name);
             for (const auto& field : msg->fields) {
                 fmt::print(out_file,"    {} {}{{}};\n", get_cpp_type(field), field.name);

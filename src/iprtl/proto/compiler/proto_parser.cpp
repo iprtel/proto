@@ -198,14 +198,12 @@ Field ProtoParser::parse_field() {
     if (current_token && current_token->text == "[") {
         advance(); // skip '['
         while (current_token && current_token->text != "]") {
-            fmt::print("Packed option: {} {}\n", field.name, current_token->text);
             if (current_token->text == "packed") {
                 field.packed = true;
                 advance();
                 if (match("=")) {
                     if (current_token){
                         field.packed = current_token->text == "true";
-                        fmt::print("Packed option: {} {}\n", field.packed, current_token->text);
                     }
                     advance();
                 }
