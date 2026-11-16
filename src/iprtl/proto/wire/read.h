@@ -8,10 +8,10 @@
 
 namespace iprtl::proto::wire {
 
-inline std::tuple<type_id, uint32_t> parse_tag(varint tag) {
+inline std::tuple<type_id, uint64_t> parse_tag(varint tag) {
     auto tag_value = tag.content;
     auto wire_type = type_id{static_cast<uint8_t>(tag_value & 0x07)};
-    uint32_t field_number = tag_value >> 3;
+    uint64_t field_number = tag_value >> 3;
     return {wire_type, field_number};
 }
 
@@ -72,6 +72,7 @@ inline std::tuple<std::span<const uint8_t>, len_data> read_len_data(std::span<co
 inline std::tuple<std::span<const uint8_t>, record> read_record(std::span<const uint8_t> buffer)  {
     auto [remaining, tag] = read_varint(buffer);
     auto [type, field_number] = parse_tag(tag);
+    if (field_number == 0 || field_number > 0x1FFFFFFF) throw wire_exception("field number must be non-zero and <= 2^29-1");
     switch(type) {
         case wire::type_id::VARINT: {
             varint value{};

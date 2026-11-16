@@ -92,10 +92,8 @@ struct codec<FieldT> {
         return value_codec::encode(remaining, value);
     }
     static void decode(value_type& object, wire::wire_value const& value) {
-        fmt::print("set_field: {}={} {}\n", std::string_view{FieldT::name.data(),FieldT::name.size()}, value, FieldT::wire_type::name);
         if (not std::holds_alternative<typename FieldT::wire_type>(value)) throw wire::wire_exception(FieldT::name.data());
         FieldT::access(object) = typename FieldT::member_type{value_codec::decode(std::get<typename FieldT::wire_type>(value))};
-        fmt::print("set_field: {}={}\n", std::string_view{FieldT::name.data(),FieldT::name.size()}, FieldT::access(object));
     }
 };
 
@@ -125,11 +123,23 @@ struct codec<FieldT> {
         }
         return remaining;
     }
-    // Each record adds one element. Records with a different wire type are ignored.
+    // Each record adds one element. Records with a different wire type throw wire_exception.
     static void decode(value_type& object, wire::wire_value const& value) {
-        if (std::holds_alternative<typename FieldT::wire_type>(value)) {
-            FieldT::access(object).push_back(element_codec::decode(std::get<typename FieldT::wire_type>(value)));
+        using element_type = typename FieldT::proto_type::element_type;
+        auto& elements = FieldT::access(object);
+        if (auto const* single = std::get_if<typename FieldT::wire_type>(&value)) {
+            elements.push_back(element_codec::decode(*single));
+            return;
         }
+        if constexpr (is_packable<element_type>) {
+            if (auto const* packed = std::get_if<wire::len_data>(&value)) {
+                for (auto element : codec<packed_p<element_type>>::decode(*packed)) {
+                    elements.push_back(element);
+                }
+                return;
+            }
+        }
+        throw wire::wire_exception(FieldT::name.data());
     }
 };
 
@@ -159,9 +169,18 @@ struct codec<FieldT> {
         return value_codec::encode(remaining, value);
     }
     // Each record appends its elements, so a list split over several records is joined.
+    // Records that are not len_data throw wire_exception.
     static void decode(value_type& object, wire::wire_value const& value) {
-        for (auto element : value_codec::decode(std::get<wire::len_data>(value))) {
-            FieldT::access(object).push_back(element);
+        using element_type = typename FieldT::proto_type::element_type;
+        auto& elements = FieldT::access(object);
+        if (auto const* packed = std::get_if<wire::len_data>(&value)) {
+            for (auto element : value_codec::decode(*packed)) {
+                elements.push_back(element);
+            }
+        } else if (auto const* single = std::get_if<typename element_type::wire_type>(&value)) {
+            elements.push_back(codec<element_type>::decode(*single));
+        } else {
+            throw wire::wire_exception(FieldT::name.data());
         }
     }
 };

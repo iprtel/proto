@@ -66,7 +66,7 @@ auto format_as(wire_value const& v){
 
 
 struct record {
-    uint32_t field_number;
+    uint64_t field_number;
     wire_value value;
 };
 auto format_as(record const& v){

@@ -6,9 +6,10 @@ A small, header-only implementation of the [Protocol Buffers](https://protobuf.d
 >
 > - **Typed programming:** using the type system to encode meaning, so that mistakes become compile errors instead of runtime bugs.
 > - **ADL (argument-dependent lookup):** generated free functions that are found automatically through the namespace of the message type.
-> - **Generic field access:** describing struct members at compile time (member pointers, type lists, `std::variant`) and reaching them from runtime data such as a field number.
+> - **Generic field access:** describing struct members at compile time (member pointers, type lists, fold expressions) and reaching them from runtime data such as a field number.
 > - **Varint and ZigZag encoding:** the variable-length integer encoding at the heart of the protobuf wire format.
-> - Templates, concepts, non-type template parameters (compile-time strings), `std::span`, `std::visit`, and `{fmt}` integration.
+> - **Layered design with customization points:** one `codec<T>` class template that lower layers declare and higher layers specialize, so dependencies only point downwards.
+> - Templates, concepts, constrained partial specializations, non-type template parameters (compile-time strings), `std::span`, and `{fmt}` integration.
 >
 > It is not meant to replace Google's `protobuf` library. It covers only part of the language and has not been hardened for production use.
 
@@ -69,6 +70,16 @@ inline bool operator==(const Date& lhs, const Date& rhs);               // field
 inline std::size_t encoded_length(const Date& msg);                     // size before encoding
 ```
 
+A field that holds another message uses `nested_p`:
+
+```cpp
+using Proto_DateTime = iprtl::proto::meta::ProtoMessage<DateTime, "DateTime",
+    iprtl::proto::meta::ProtoField<DateTime, 1, iprtl::proto::meta::nested_p<Proto_Date>, "date", &DateTime::date>,
+    iprtl::proto::meta::ProtoField<DateTime, 2, iprtl::proto::sint32_p, "seconds_from_noon", &DateTime::seconds_from_noon>>;
+```
+
+The generated functions are thin wrappers around the templates in [meta.h](src/iprtl/proto/meta.h) (`iprtl::proto::encode_message<Proto_Date>(v)` and so on).
+
 Using the generated code feels like working with ordinary C++ structs:
 
 ```cpp
@@ -111,7 +122,7 @@ The library uses distinct types where a plain integer would also "work":
 
 - **Wire types** (`varint`, `i32`, `i64`, `len_data` in [wire/types.h](src/iprtl/proto/wire/types.h)) are separate types. Each knows its own wire type id, and overloads choose the correct encoding for each one.
 - **Proto types** (`int32_p`, `sint32_p`, `fixed32_p`, … in [types.h](src/iprtl/proto/types.h)) are tag types. Each pairs a C++ type (`cpp_type`) with a wire type (`wire_type`). `int32`, `sint32` and `sfixed32` all map to `int32_t` in C++, but they are encoded very differently. The tag type picks the right encoding at compile time.
-- **Concepts** ([concepts.h](src/iprtl/proto/concepts.h)) restrict templates to valid message and field descriptions.
+- **Concepts** restrict templates to the types they can handle: [concepts.h](src/iprtl/proto/concepts.h) groups the proto types (varint, fixed, length-delimited, packed, …) and [meta/concepts.h](src/iprtl/proto/meta/concepts.h) recognizes message and field descriptions.
 - **Compile-time strings** (`FixedString`, `TemplateString`) let names such as `"day"` be template arguments, so field names are available for formatting without any runtime registry.
 
 ### ADL — argument-dependent lookup
@@ -122,18 +133,17 @@ The generator puts `encode_message`, `decode_message`, `format_as`, `operator==`
 
 A message is described by a `ProtoMessage<Class, Name, ProtoField...>` type list ([meta/types.h](src/iprtl/proto/meta/types.h)). Each `ProtoField` stores the field number, proto type, name and a **pointer to member** (`&Date::day`). Generic algorithms can therefore walk over all fields at compile time to encode, compare, format or compute lengths.
 
-Decoding goes in the other direction: a field number read from the wire at runtime has to be mapped to a compile-time field description. The message codec ([meta/codec.h](src/iprtl/proto/meta/codec.h)) does this with a fold expression over the fields and hands the value to the field whose number matches.
+Because the fields are a template parameter pack, these algorithms are fold expressions. Computing the length of a message is simply the sum over its fields:
 
-### One codec per type
+```cpp
+static std::size_t length(value_type const& message) {
+    return (std::size_t{0} + ... + codec<Fields>::length(message));
+}
+```
 
-Every proto type has a `codec<T>` specialization ([codec.h](src/iprtl/proto/codec.h)) with `length`, `encode` and `decode`. The free functions `length<T>(v)`, `encode<T>(buffer, v)` and `decode<T>(...)` forward to it, so the same call works for a scalar, a field or a whole message.
+Formatting and comparison use `ProtoMessage::for_each_field`, which calls a templated lambda once per field.
 
-The layers depend on each other in one direction only, **meta → proto → wire**:
-
-- `proto/` specializes `codec` for single values ([scalar_codecs.h](src/iprtl/proto/scalar_codecs.h), [packed_codec.h](src/iprtl/proto/packed_codec.h)) and knows nothing about messages.
-- `meta/` adds specializations for fields, messages and nested messages ([meta/codec.h](src/iprtl/proto/meta/codec.h)).
-
-The compiler looks up class template specializations only when a codec is used, so the order in which headers define them does not matter and no forward declarations are needed.
+Decoding goes in the other direction: a field number read from the wire at runtime has to be mapped to a compile-time field description. The message codec ([meta/codec.h](src/iprtl/proto/meta/codec.h)) folds over the fields with `||` and hands the value to the first field whose number matches. Unknown field numbers are skipped.
 
 ### Varint and ZigZag
 
@@ -141,20 +151,148 @@ Protobuf stores most integers as **varints**: 7 bits of payload per byte, with t
 
 ---
 
+## Library structure
+
+The library has three layers. Each one only uses the layers below it:
+
+```
+ generated .proto.h headers
+            │  include
+            ▼
+ meta.h                     encode_message, decode_message, encoded_length,
+            │               messages_equal, format_message
+            ▼
+ meta/   iprtl::proto::meta     messages and fields: ProtoMessage, ProtoField, nested_p,
+            │                   their codecs, equality and formatting
+            ▼
+ proto/  iprtl::proto           one value at a time: proto types (int32_p, string_p,
+            │                   enum_p, packed_p, …) and their codecs
+            ▼
+ wire/   iprtl::proto::wire     raw wire format: varint, i32, i64, len_data, records
+```
+
+Three rules keep the layers apart:
+
+- Nothing in `proto/` includes anything from `meta/`. `proto/` does not know that messages exist.
+- Each header's namespace matches its folder.
+- Generated code only includes `meta.h` and only calls the functions declared there.
+
+### The codec customization point
+
+The layers are connected by one class template, declared in [codec.h](src/iprtl/proto/codec.h):
+
+```cpp
+namespace iprtl::proto {
+template<typename ProtoT>
+struct codec;   // no definition: a type without a specialization is not supported
+}
+```
+
+Every supported type provides a specialization with the same shape:
+
+```cpp
+using value_type = ...;                                         // the C++ value
+static std::size_t        length(value_type const&);
+static std::span<uint8_t> encode(std::span<uint8_t>, value_type const&);
+static ...                decode(...);                          // see below
+```
+
+Three free functions forward to it, so callers never name `codec` directly:
+
+```cpp
+length<sint32_p>(-1);                  // 1
+encode<string_p>(buffer, "hello");     // writes 05 68 65 6c 6c 6f, returns the rest of buffer
+decode<sint32_p>(wire::varint{1});     // -1
+```
+
+The same three calls also work for a field (`length<Field>(object)`) or a whole message (`length<Proto_Date>(date)`). `decode` has a different signature for each kind:
+
+| Kind | Specialized in | `decode` |
+|---|---|---|
+| Single value (`int32_p`, `enum_p<E>`, `string_p`, `packed_p<T>`, …) | [scalar_codecs.h](src/iprtl/proto/scalar_codecs.h), [packed_codec.h](src/iprtl/proto/packed_codec.h) | `decode(wire_value) → value` |
+| Nested message (`meta::nested_p<M>`) | [meta/codec.h](src/iprtl/proto/meta/codec.h) | `decode(len_data) → message` |
+| Field (`meta::ProtoField<…>`) | [meta/codec.h](src/iprtl/proto/meta/codec.h) | `decode(object, wire_value)` stores into the member |
+| Message (`meta::ProtoMessage<…>`) | [meta/codec.h](src/iprtl/proto/meta/codec.h) | `decode(buffer, message) → remaining buffer` |
+
+Single values are grouped with constrained partial specializations, for example:
+
+```cpp
+template<typename ProtoT>
+requires is_encoded_varint<ProtoT>     // int32, int64, uint32, uint64, sint32, sint64, bool
+struct codec<ProtoT> { ... };
+```
+
+### Why a class template and not overloaded functions
+
+An earlier version used overloaded function templates (`length<T>`, `encode<T>`, `as<T>`) that were selected by concepts. That caused two problems:
+
+- **Name hiding.** Once message overloads moved into `namespace meta`, a call such as `length<P>(v)` inside `meta` found only `meta::length` and stopped looking, so the overloads in `proto` were invisible. Argument-dependent lookup did not help, because the arguments are `int` or user structs.
+- **Declaration order.** A field calls the nested-message overload, which calls the message overload, which calls the field overload again. With functions, each one has to be declared before it is used, which needed forward declarations and an include loop between `as.h` and `decode.h`.
+
+The compiler looks up class template specializations when the codec is *used*, which happens in user code after all headers are included. So `meta/` can add `codec<meta::nested_p<M>>` without `proto/` knowing about it, and the order of the specializations does not matter.
+
+### Following one call
+
+Encoding a `DateTime`:
+
+```
+encode_message(dt)                                     generated, user namespace
+└─ iprtl::proto::encode_message<Proto_DateTime>        meta.h
+   └─ codec<ProtoMessage<DateTime, …>>::encode         meta/codec.h   folds over fields
+      ├─ codec<ProtoField<…, nested_p<Proto_Date>, …>>  meta/codec.h   tag + value
+      │  └─ codec<nested_p<Proto_Date>>::encode         meta/codec.h   length prefix + message
+      │     └─ codec<ProtoMessage<Date, …>>::encode     meta/codec.h
+      │        └─ codec<ProtoField<…, uint32_p, …>>     meta/codec.h
+      │           └─ codec<uint32_p>::encode            scalar_codecs.h
+      │              └─ wire::encode(buffer, varint)    wire/encode.h
+      └─ codec<ProtoField<…, sint32_p, …>>              …
+```
+
+### Adding a new type
+
+To support a new proto type, add a tag type and a `codec` specialization for it. For a single value, put both in `proto/`. For anything that needs to know about messages, put them in `meta/`. No existing code has to change.
+
+---
+
 ## Project layout
 
 ```
 src/iprtl/
-├── enums.h, template_string.h   Helpers: reflective enums, compile-time strings
+├── enums.h, template_string.h      Helpers: reflective enums, compile-time strings
 └── proto/
-    ├── wire/                    Low-level wire format: varint, i32, i64, len_data, records
-    ├── types.h, codec.h, …      Proto type tags and codecs for single values (no message knowledge)
-    ├── meta/                    Message/field descriptions and their codecs, equality, formatting
-    ├── meta.h                   Main entry point included by generated headers
-    ├── compiler/                protopiler: tokenizer, parser, AST and C++ code generator
-    └── tools/                   wire-dump: prints the raw records of a binary message
-src/examples/datetime/           Example program using generated code
-tests/                           GoogleTest suites for wire layer, tokenizer and messages
+    ├── wire/                       iprtl::proto::wire: the raw wire format
+    │   ├── types.h                 varint, i32, i64, len_data, record, tag()
+    │   ├── read.h, write.h         read/write a single wire value or record
+    │   ├── encode.h, length.h      encode() / length() overloads for wire values
+    │   ├── is_correct_length.h     check a buffer before reading
+    │   └── wire_exception.h        thrown on malformed input
+    ├── proto_wire.h                umbrella header for the wire layer
+    │
+    ├── types.h                     iprtl::proto: proto type tags (int32_p, …, enum_p, repeated_p, packed_p)
+    ├── concepts.h                  groups of proto types (is_encoded_varint, is_packed_p, …)
+    ├── codec.h                     codec<T> declaration + length/encode/decode free functions
+    ├── scalar_codecs.h             codecs for scalars, enums, string and bytes
+    ├── packed_repeated_values.h    iterates over the elements of a packed field
+    ├── packed_codec.h              codec for packed_p<T>
+    ├── proto_exception.h           thrown on invalid messages
+    │
+    ├── meta/                       iprtl::proto::meta: messages and fields
+    │   ├── fixedstring.h           compile-time string used for names
+    │   ├── types.h                 ProtoMessage, ProtoField, nested_p
+    │   ├── concepts.h              is_proto_message_p, is_proto_field_p, is_nested_p
+    │   ├── codec.h                 codecs for messages, nested messages and fields
+    │   ├── equal.h                 field-wise comparison
+    │   └── types_format.h          {fmt} formatting of fields and messages
+    ├── meta.h                      entry point for generated code
+    │
+    ├── compiler/                   protopiler: tokenizer, parser, AST and C++ code generator
+    └── tools/                      wire-dump: prints the raw records of a binary message
+src/examples/datetime/              Example program using generated code
+tests/
+├── wire/                           wire layer
+├── proto/                          single-value codecs, fields and packed values
+├── proto/message/                  whole messages, using headers generated from .proto files
+├── tokenizer/, compiler/           protopiler front end
 ```
 
 ---

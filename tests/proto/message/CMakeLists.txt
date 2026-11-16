@@ -48,3 +48,6 @@ target_include_directories(decode-error-tests PRIVATE ${CMAKE_CURRENT_BINARY_DIR
 
 define_test(message-tests message_tests.cpp ${TEST_PROTO_HEADERS})
 target_include_directories(message-tests PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
+
+define_test(malformed-message-tests malformed_message_tests.cpp ${TEST_PROTO_HEADERS})
+target_include_directories(malformed-message-tests PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/include)
