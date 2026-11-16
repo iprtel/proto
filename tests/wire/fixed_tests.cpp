@@ -75,16 +75,16 @@ Fixed64Test, // Name der Test-Fixture-Klasse
 
 TEST(FixedReadErrors, truncated_i32_throws) {
     std::vector<uint8_t> encoded{0x00, 0x80, 0x3f};
-    EXPECT_THROW(read_i32(encoded), iprtl::proto::wire_exception);
+    EXPECT_THROW(read_i32(encoded), iprtl::proto::wire::wire_exception);
 }
 
 TEST(FixedReadErrors, truncated_i64_throws) {
     std::vector<uint8_t> encoded{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
-    EXPECT_THROW(read_i64(encoded), iprtl::proto::wire_exception);
+    EXPECT_THROW(read_i64(encoded), iprtl::proto::wire::wire_exception);
 }
 
 TEST(FixedReadErrors, empty_buffer_throws) {
     std::vector<uint8_t> encoded{};
-    EXPECT_THROW(read_i32(encoded), iprtl::proto::wire_exception);
-    EXPECT_THROW(read_i64(encoded), iprtl::proto::wire_exception);
+    EXPECT_THROW(read_i32(encoded), iprtl::proto::wire::wire_exception);
+    EXPECT_THROW(read_i64(encoded), iprtl::proto::wire::wire_exception);
 }

@@ -74,17 +74,17 @@ VarintLengthTest, // Name der Test-Fixture-Klasse
 
 TEST(VarintReadErrors, empty_buffer_throws) {
     std::vector<uint8_t> encoded{};
-    EXPECT_THROW(read_varint(encoded), iprtl::proto::wire_exception);
+    EXPECT_THROW(read_varint(encoded), iprtl::proto::wire::wire_exception);
 }
 
 TEST(VarintReadErrors, truncated_varint_throws) {
     std::vector<uint8_t> encoded{0x80, 0x80};
-    EXPECT_THROW(read_varint(encoded), iprtl::proto::wire_exception);
+    EXPECT_THROW(read_varint(encoded), iprtl::proto::wire::wire_exception);
 }
 
 TEST(VarintReadErrors, varint_longer_than_10_bytes_throws) {
     std::vector<uint8_t> encoded{0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0x01};
-    EXPECT_THROW(read_varint(encoded), iprtl::proto::wire_exception);
+    EXPECT_THROW(read_varint(encoded), iprtl::proto::wire::wire_exception);
 }
 
 TEST(VarintReadErrors, remaining_starts_after_varint) {

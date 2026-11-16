@@ -4,10 +4,10 @@
 #include <optional>
 #include <span>
 
-#include "as_packable.h"
-#include "iprtl/proto/wire/read.h"
+#include "decode.h"
+#include "wire/read.h"
 
-namespace iprtl::proto::meta {
+namespace iprtl::proto {
 template <typename T>
 class packed_iterator {
 public:

@@ -1,10 +1,10 @@
 #pragma once
 
 #include "types.h"
-#include "proto_exception.h"
+#include "iprtl/proto/proto_exception.h"
 #include "iprtl/proto/concepts.h"
 #include "as.h"
-#include "packed_repeated_values.h"
+#include "iprtl/proto/packed_repeated_values.h"
 
 namespace iprtl::proto::meta {
 
@@ -19,7 +19,7 @@ template <typename MetaField, typename ObjectT>
 requires (! is_repeated_field<typename MetaField::proto_type>)
 void set_field(ObjectT& object, wire::wire_value const& value) {
     fmt::print("set_field: {}={} {}\n", std::string_view{MetaField::name.data(),MetaField::name.size()}, value, MetaField::wire_type::name);
-    if (not std::holds_alternative<typename MetaField::wire_type>(value)) throw wire_exception(MetaField::name.data());
+    if (not std::holds_alternative<typename MetaField::wire_type>(value)) throw wire::wire_exception(MetaField::name.data());
     auto wire_value =  std::get<typename MetaField::wire_type>(value);
     auto v =  typename MetaField::member_type{as<typename MetaField::proto_type>(wire_value)};
     MetaField::access(object) = v;

@@ -2,7 +2,7 @@
 
 #include <fmt/core.h>
 
-#include "proto/wire/types.h"
+#include "iprtl/proto/wire/types.h"
 
 namespace iprtl::proto::wire {
 

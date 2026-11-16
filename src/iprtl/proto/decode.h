@@ -1,7 +1,9 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
-#include "iprtl/proto/concepts.h"
+#include <string>
+#include "concepts.h"
 
 namespace iprtl::proto {
 
@@ -41,6 +43,12 @@ requires std::is_enum<typename Type::cpp_type>::value
 Type::cpp_type as(wire::varint value) {
     auto v = as<uint32_p>(value);
     return typename Type::cpp_type(v);
+}
+
+template<typename Type>
+requires std::same_as<Type, string_p>
+std::string as(wire::len_data const& value) {
+    return std::string(reinterpret_cast<const char*>(value.content.data()), value.content.size());
 }
 
 }

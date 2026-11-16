@@ -3,15 +3,10 @@
 #include <cstdint>
 #include "iprtl/proto/concepts.h"
 #include "decode.h"
-#include "as_packable.h"
+#include "iprtl/proto/decode.h"
+#include "iprtl/proto/proto_exception.h"
 
 namespace iprtl::proto {
-
-template<typename Type>
-requires std::same_as<Type, string_p>
-std::string as(wire::len_data const& value) {
-    return std::string(reinterpret_cast<const char*>(value.content.data()), value.content.size());
-}
 
 namespace meta {
 template<typename ProtoMessageT>

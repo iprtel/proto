@@ -8,7 +8,7 @@
 
 #include "iprtl/proto/encode.h"
 #include "iprtl/proto/length.h"
-#include "iprtl/proto/meta/packed_repeated_values.h"
+#include "iprtl/proto/packed_repeated_values.h"
 
 using namespace iprtl::proto;
 
@@ -30,7 +30,7 @@ using values_of = std::vector<typename T::cpp_type>;
 // Decode the payload of a packed field (without the length prefix).
 template <typename T>
 values_of<T> decode_packed(const std::vector<uint8_t>& payload) {
-    meta::packed_repeated_values<T> package;
+    packed_repeated_values<T> package;
     package.data.content = payload;
     values_of<T> result;
     for (auto value : package) {
@@ -223,16 +223,16 @@ TEST(PackedRepeatedValues, many_varint_elements) {
 }
 
 TEST(PackedRepeatedValues, truncated_varint_throws) {
-    EXPECT_THROW(decode_packed<int32_p>({0x01, 0x80}), wire_exception);
+    EXPECT_THROW(decode_packed<int32_p>({0x01, 0x80}), wire::wire_exception);
 }
 
 TEST(PackedRepeatedValues, truncated_fixed32_throws) {
     // One complete float followed by one byte too few for the next.
-    EXPECT_THROW(decode_packed<float_p>({0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80}), wire_exception);
-    EXPECT_THROW(decode_packed<fixed32_p>({0x01, 0x00}), wire_exception);
+    EXPECT_THROW(decode_packed<float_p>({0x00, 0x00, 0x80, 0x3F, 0x00, 0x00, 0x80}), wire::wire_exception);
+    EXPECT_THROW(decode_packed<fixed32_p>({0x01, 0x00}), wire::wire_exception);
 }
 
 TEST(PackedRepeatedValues, truncated_fixed64_throws) {
-    EXPECT_THROW(decode_packed<double_p>({0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0}), wire_exception);
-    EXPECT_THROW(decode_packed<sfixed64_p>({0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}), wire_exception);
+    EXPECT_THROW(decode_packed<double_p>({0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF0}), wire::wire_exception);
+    EXPECT_THROW(decode_packed<sfixed64_p>({0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01}), wire::wire_exception);
 }

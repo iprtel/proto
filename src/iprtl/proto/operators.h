@@ -1,8 +1,11 @@
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
+#include <variant>
 #include "concepts.h"
 #include "wire/length.h"
+#include "support.h"
 
 
 namespace iprtl::proto {
