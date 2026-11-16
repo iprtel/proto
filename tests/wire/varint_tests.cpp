@@ -28,8 +28,8 @@ TEST_P(VarintTest, read) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-VarintTest, // Name der Test-Fixture-Klasse
+Examples,
+VarintTest,
 ::testing::Values(
     VarintTestParam{0, {0x00}},
     VarintTestParam{1, {0x01}},
@@ -38,7 +38,7 @@ VarintTest, // Name der Test-Fixture-Klasse
     VarintTestParam{128, {0x80, 0x01}},
     VarintTestParam{16384, {0x80, 0x80, 0x01}},
     VarintTestParam{std::numeric_limits<uint64_t>::max(), {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0x01}}
-) // Parameterwerte
+)
 );
 
 
@@ -56,8 +56,8 @@ TEST_P(VarintLengthTest, check) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-MyLengthTests, // Name der Instanzierung
-VarintLengthTest, // Name der Test-Fixture-Klasse
+Examples,
+VarintLengthTest,
 ::testing::Values(
     VarintLengthTestParam{CheckResult::Ok, {0x00}},
     VarintLengthTestParam{CheckResult::Ok, {0x01}},
@@ -68,7 +68,7 @@ VarintLengthTest, // Name der Test-Fixture-Klasse
     VarintLengthTestParam{CheckResult::Ok, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0x01}},
     VarintLengthTestParam{CheckResult::Expected_Varint, {0x80}},
     VarintLengthTestParam{CheckResult::Expected_Varint, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,0xFF,0x01}}
-) // Parameterwerte
+)
 );
 
 

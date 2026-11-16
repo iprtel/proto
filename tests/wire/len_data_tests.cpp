@@ -31,15 +31,15 @@ TEST_P(LenDataTest, read) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-LenDataTest, // Name der Test-Fixture-Klasse
+Examples,
+LenDataTest,
 ::testing::Values(
     LenDataTestParam{{{0x00}}, {{0x01, 0x00}}},
     LenDataTestParam{{{0x01}}, {{0x01, 0x01}}},
     LenDataTestParam{{{0xFF}}, {{0x01, 0xFF}}},
     LenDataTestParam{{{0x80}}, {{0x01, 0x80}}},
     LenDataTestParam{{{0x00, 0x00, 0x00}}, {{0x03, 0x00, 0x00, 0x00}}}
-) // Parameterwerte
+)
 );
 
 
@@ -57,13 +57,13 @@ TEST_P(LenDataLengthTest, read) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-MyLengthTests, // Name der Instanzierung
-LenDataLengthTest, // Name der Test-Fixture-Klasse
+Examples,
+LenDataLengthTest,
 ::testing::Values(
     LenDataLengthTestParam{CheckResult::Ok, {0x00, 0x00}},
     LenDataLengthTestParam{CheckResult::Ok, {0x01, 0x00}},
     LenDataLengthTestParam{CheckResult::Ok, {0x03, 0x00, 0x00, 0x00}},
     LenDataLengthTestParam{CheckResult::Expected_LenData, {0x83, 0x00, 0x00, 0x00}},
     LenDataLengthTestParam{CheckResult::Expected_LenData, {0x03, 0x00, 0x00}}
-) // Parameterwerte
+)
 );

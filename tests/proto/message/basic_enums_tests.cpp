@@ -9,21 +9,21 @@ struct BasicTestParam {
     std::vector<uint8_t> encoded;
 };
 
-struct BasicStringsTest : public ::testing::TestWithParam<BasicTestParam> {};
+struct BasicEnumsTest : public ::testing::TestWithParam<BasicTestParam> {};
 
-TEST_P(BasicStringsTest, length) {
+TEST_P(BasicEnumsTest, length) {
     const auto& param = GetParam();
     auto length = encoded_length(param.message);
     EXPECT_EQ(length, param.encoded.size()) << fmt::format("{}", param.message);
 }
 
-TEST_P(BasicStringsTest, encode_message) {
+TEST_P(BasicEnumsTest, encode_message) {
     const auto& param = GetParam();
     auto encoded_message = encode_message(param.message);
     EXPECT_EQ(encoded_message.size(), param.encoded.size()) << fmt::format("{}", param.message);
     EXPECT_THAT(encoded_message, testing::ElementsAreArray( param.encoded));
 }
-TEST_P(BasicStringsTest, decode_message) {
+TEST_P(BasicEnumsTest, decode_message) {
     const auto& param = GetParam();
     tests::BasicEnums message{};
     auto remaining = decode_message(message, {param.encoded});
@@ -32,12 +32,12 @@ TEST_P(BasicStringsTest, decode_message) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-BasicStringsTest, // Name der Test-Fixture-Klasse
+RoundTrip,
+BasicEnumsTest,
 ::testing::Values(
     BasicTestParam{{}, {}},
     BasicTestParam{{.choice=tests::Choice::CHOICE_NONE}, {}},
     BasicTestParam{{.choice=tests::Choice::CHOICE_POSITIVE}, {0x08, 0x0d}},
     BasicTestParam{{.choice=tests::Choice::CHOICE_NEGATIVE}, {0x08, 0xf3, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0x01}}
-) // Parameterwerte
+)
 );

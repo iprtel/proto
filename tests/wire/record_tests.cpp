@@ -46,8 +46,8 @@ TEST_P(RecordTest, read) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-RecordTest, // Name der Test-Fixture-Klasse
+Examples,
+RecordTest,
 ::testing::Values(
     RecordTestParam{{1, varint{0}}, {0x08, 0x00}},
     RecordTestParam{{2, i32{42}}, {0x15, 0x2A, 0x00, 0x00, 0x00}},
@@ -55,7 +55,6 @@ RecordTest, // Name der Test-Fixture-Klasse
     RecordTestParam{{4, len_data{{5, 6, 7}}}, {0x22, 0x03, 5, 6, 7}},
     RecordTestParam{{128, varint{128}}, {0x80, 0x08, 0x80, 0x01}}
 )
-// Parameterwerte
 );
 
 
@@ -114,8 +113,8 @@ TEST_P(RecordLengthTest, write) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyLengthTest, // Name der Instanzierung
-RecordLengthTest, // Name der Test-Fixture-Klasse
+Examples,
+RecordLengthTest,
 ::testing::Values(
     RecordLengthTestParam{CheckResult::Ok, {0x08, 0x00}},
     RecordLengthTestParam{CheckResult::Ok, {0x15, 0x2A, 0x00, 0x00, 0x00}},

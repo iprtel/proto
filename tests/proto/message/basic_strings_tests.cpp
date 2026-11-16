@@ -32,7 +32,7 @@ TEST_P(BasicStringsTest, decode_message) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation,
+RoundTrip,
 BasicStringsTest,
 ::testing::Values(
     BasicTestParam{{}, {}},

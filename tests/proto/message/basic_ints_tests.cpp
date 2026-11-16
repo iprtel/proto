@@ -9,21 +9,21 @@ struct BasicTestParam {
     std::vector<uint8_t> encoded;
 };
 
-struct BasicStringsTest : public ::testing::TestWithParam<BasicTestParam> {};
+struct BasicIntsTest : public ::testing::TestWithParam<BasicTestParam> {};
 
-TEST_P(BasicStringsTest, length) {
+TEST_P(BasicIntsTest, length) {
     const auto& param = GetParam();
     auto length = encoded_length(param.message);
     EXPECT_EQ(length, param.encoded.size()) << fmt::format("{}", param.message);
 }
 
-TEST_P(BasicStringsTest, encode_message) {
+TEST_P(BasicIntsTest, encode_message) {
     const auto& param = GetParam();
     auto encoded_message = encode_message(param.message);
     EXPECT_EQ(encoded_message.size(), param.encoded.size()) << fmt::format("{}", param.message);
     EXPECT_THAT(encoded_message, testing::ElementsAreArray( param.encoded));
 }
-TEST_P(BasicStringsTest, decode_message) {
+TEST_P(BasicIntsTest, decode_message) {
     const auto& param = GetParam();
     tests::BasicInts message{};
     auto remaining = decode_message(message, {param.encoded});
@@ -33,8 +33,8 @@ TEST_P(BasicStringsTest, decode_message) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-BasicStringsTest, // Name der Test-Fixture-Klasse
+RoundTrip,
+BasicIntsTest,
 ::testing::Values(
     BasicTestParam{{}, {}},
     BasicTestParam{{.a=1}, {0x08, 0x01}},
@@ -52,5 +52,5 @@ BasicStringsTest, // Name der Test-Fixture-Klasse
     BasicTestParam{{.b64=1}, {0x60, 0x02}},
     BasicTestParam{{.b64=-1}, {0x60, 0x01}}
 
-) // Parameterwerte
+)
 );

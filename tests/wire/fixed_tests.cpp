@@ -30,8 +30,8 @@ TEST_P(Fixed32Test, read) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-Fixed32Test, // Name der Test-Fixture-Klasse
+Examples,
+Fixed32Test,
 ::testing::Values(
     FixedTestParam<i32>{i32{0u}, {0x00, 0x00, 0x00, 0x00}},
     FixedTestParam<i32>{i32{1u}, {0x01, 0x00, 0x00, 0x00}},
@@ -39,7 +39,7 @@ Fixed32Test, // Name der Test-Fixture-Klasse
     FixedTestParam<i32>{i32{127u}, {0x7F, 0x00, 0x00, 0x00}},
     FixedTestParam<i32>{i32{128u}, {0x80, 0x00, 0x00, 0x00}},
     FixedTestParam<i32>{i32{std::numeric_limits<uint32_t>::max()}, {0xFF, 0xFF, 0xFF, 0xFF}}
-) // Parameterwerte
+)
 );
 
 
@@ -61,8 +61,8 @@ TEST_P(Fixed64Test, read) {
 }
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-Fixed64Test, // Name der Test-Fixture-Klasse
+Examples,
+Fixed64Test,
 ::testing::Values(
     FixedTestParam<i64>{i64{0u}, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
     FixedTestParam<i64>{i64{1u}, {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
@@ -70,7 +70,7 @@ Fixed64Test, // Name der Test-Fixture-Klasse
     FixedTestParam<i64>{i64{127u}, {0x7F, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
     FixedTestParam<i64>{i64{128u}, {0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
     FixedTestParam<i64>{i64{std::numeric_limits<uint64_t>::max()}, {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}}
-) // Parameterwerte
+)
 );
 
 TEST(FixedReadErrors, truncated_i32_throws) {

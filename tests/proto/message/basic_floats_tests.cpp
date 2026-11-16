@@ -33,13 +33,13 @@ TEST_P(BasicFloatsTest, decode_message) {
 
 
 INSTANTIATE_TEST_SUITE_P(
-MyInstantiation, // Name der Instanzierung
-BasicFloatsTest, // Name der Test-Fixture-Klasse
+RoundTrip,
+BasicFloatsTest,
 ::testing::Values(
     BasicTestParam{{}, {}},
     BasicTestParam{{.a=1.0f}, {0x0d, 0x00, 0x00, 0x80, 0x3f}},
     BasicTestParam{{.a=-1.0f}, {0x0d, 0x00, 0x00, 0x80, 0xbf}},
     BasicTestParam{{.b=1.0}, {0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0x3f}},
     BasicTestParam{{.b=-1.0}, {0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf0, 0xbf}}
-) // Parameterwerte
+)
 );
