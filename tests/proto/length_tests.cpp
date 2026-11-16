@@ -1,12 +1,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "iprtl/proto/meta/length.h"
-#include "iprtl/proto/meta/operators.h"
+#include "iprtl/proto/meta/codec.h"
+#include "iprtl/proto/meta/equal.h"
 #include <limits>
 
 
 using namespace iprtl::proto;
-using namespace iprtl::proto::meta;
 
 TEST(LengthTest, length_fixed) {
     EXPECT_EQ(length<fixed32_p>(0u),4);

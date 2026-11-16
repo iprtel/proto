@@ -4,7 +4,7 @@
 #include <optional>
 #include <span>
 
-#include "decode.h"
+#include "scalar_codecs.h"
 #include "wire/read.h"
 
 namespace iprtl::proto {
@@ -42,19 +42,19 @@ private:
          if constexpr (std::is_same_v<typename T::wire_type, wire::varint>) {
              auto [remaining, value] = wire::read_varint(m_span);
              m_span = remaining;
-             return as<T>(value);
+             return codec<T>::decode(value);
          } else if constexpr (std::is_same_v<typename T::wire_type, wire::i32>) {
              auto [remaining, value] = wire::read_i32(m_span);
              m_span = remaining;
-             return as<T>(value);
+             return codec<T>::decode(value);
          } else if constexpr (std::is_same_v<typename T::wire_type, wire::i64>) {
              auto [remaining, value] = wire::read_i64(m_span);
              m_span = remaining;
-             return as<T>(value);
+             return codec<T>::decode(value);
          } else if constexpr (std::is_same_v<typename T::wire_type, wire::len_data>) {
              auto [remaining, value] = wire::read_len_data(m_span);
              m_span = remaining;
-             return as<T>(value);
+             return codec<T>::decode(value);
          }
          return std::nullopt;
      }

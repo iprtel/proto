@@ -122,11 +122,22 @@ The generator puts `encode_message`, `decode_message`, `format_as`, `operator==`
 
 A message is described by a `ProtoMessage<Class, Name, ProtoField...>` type list ([meta/types.h](src/iprtl/proto/meta/types.h)). Each `ProtoField` stores the field number, proto type, name and a **pointer to member** (`&Date::day`). Generic algorithms can therefore walk over all fields at compile time to encode, compare, format or compute lengths.
 
-Decoding goes in the other direction: a field number read from the wire at runtime has to be mapped to a compile-time field description. [support.h](src/iprtl/proto/support.h) builds a `std::variant` of all field accessors and selects the right one by field number. `std::visit` then dispatches to the correctly typed `set_field` ([meta/decode.h](src/iprtl/proto/meta/decode.h)).
+Decoding goes in the other direction: a field number read from the wire at runtime has to be mapped to a compile-time field description. The message codec ([meta/codec.h](src/iprtl/proto/meta/codec.h)) does this with a fold expression over the fields and hands the value to the field whose number matches.
+
+### One codec per type
+
+Every proto type has a `codec<T>` specialization ([codec.h](src/iprtl/proto/codec.h)) with `length`, `encode` and `decode`. The free functions `length<T>(v)`, `encode<T>(buffer, v)` and `decode<T>(...)` forward to it, so the same call works for a scalar, a field or a whole message.
+
+The layers depend on each other in one direction only, **meta → proto → wire**:
+
+- `proto/` specializes `codec` for single values ([scalar_codecs.h](src/iprtl/proto/scalar_codecs.h), [packed_codec.h](src/iprtl/proto/packed_codec.h)) and knows nothing about messages.
+- `meta/` adds specializations for fields, messages and nested messages ([meta/codec.h](src/iprtl/proto/meta/codec.h)).
+
+The compiler looks up class template specializations only when a codec is used, so the order in which headers define them does not matter and no forward declarations are needed.
 
 ### Varint and ZigZag
 
-Protobuf stores most integers as **varints**: 7 bits of payload per byte, with the high bit marking that another byte follows. Small numbers need fewer bytes. Negative `int32`/`int64` values always take 10 bytes. For that reason, `sint32`/`sint64` first apply **ZigZag** encoding (`(n << 1) ^ (n >> 63)`), which maps small negative numbers to small unsigned numbers. See [wire/read.h](src/iprtl/proto/wire/read.h), [wire/encode.h](src/iprtl/proto/wire/encode.h) and [as.h](src/iprtl/proto/as.h). The tests in [tests/wire/varint_tests.cpp](tests/wire/varint_tests.cpp) and [tests/proto/message/basic_ints_tests.cpp](tests/proto/message/basic_ints_tests.cpp) show the exact byte sequences.
+Protobuf stores most integers as **varints**: 7 bits of payload per byte, with the high bit marking that another byte follows. Small numbers need fewer bytes. Negative `int32`/`int64` values always take 10 bytes. For that reason, `sint32`/`sint64` first apply **ZigZag** encoding (`(n << 1) ^ (n >> 63)`), which maps small negative numbers to small unsigned numbers. See [wire/read.h](src/iprtl/proto/wire/read.h), [wire/encode.h](src/iprtl/proto/wire/encode.h) and [scalar_codecs.h](src/iprtl/proto/scalar_codecs.h). The tests in [tests/wire/varint_tests.cpp](tests/wire/varint_tests.cpp) and [tests/proto/message/basic_ints_tests.cpp](tests/proto/message/basic_ints_tests.cpp) show the exact byte sequences.
 
 ---
 
@@ -137,8 +148,8 @@ src/iprtl/
 ├── enums.h, template_string.h   Helpers: reflective enums, compile-time strings
 └── proto/
     ├── wire/                    Low-level wire format: varint, i32, i64, len_data, records
-    ├── meta/                    Compile-time message/field descriptions, decoding, formatting
-    ├── types.h, encode.h, …     Proto type tags and the generic encode/length/compare layer
+    ├── types.h, codec.h, …      Proto type tags and codecs for single values (no message knowledge)
+    ├── meta/                    Message/field descriptions and their codecs, equality, formatting
     ├── meta.h                   Main entry point included by generated headers
     ├── compiler/                protopiler: tokenizer, parser, AST and C++ code generator
     └── tools/                   wire-dump: prints the raw records of a binary message

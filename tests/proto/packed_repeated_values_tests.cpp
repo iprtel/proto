@@ -6,9 +6,7 @@
 #include <span>
 #include <vector>
 
-#include "iprtl/proto/encode.h"
-#include "iprtl/proto/length.h"
-#include "iprtl/proto/packed_repeated_values.h"
+#include "iprtl/proto/packed_codec.h"
 
 using namespace iprtl::proto;
 

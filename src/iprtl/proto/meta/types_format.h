@@ -1,13 +1,12 @@
 #pragma once
 
-#include "types.h"
 #include <string>
-#include <variant>
+#include <string_view>
 #include <vector>
 #include <fmt/format.h>
 #include <fmt/ranges.h>
-#include "field_access.h"
 #include "concepts.h"
+#include "types.h"
 
 namespace iprtl::proto::meta {
 template<typename ProtoT>
@@ -26,14 +25,9 @@ template<typename ProtoMessageT>
 requires is_proto_message_p<ProtoMessageT>
 inline auto format_as(typename ProtoMessageT::cpp_type const& v){
     std::vector<std::string> field_values;
-    auto size = std::variant_size<typename ProtoMessageT::message_fields>::value;
-    for (auto i=0u; i < size; i++){
-        auto field = AccessorFactory<typename ProtoMessageT::message_fields>{}.byIndex(i);
-        std::visit([&](auto&& field_access){
-            using AccessorT = std::decay_t<decltype(field_access)>;
-            field_values.push_back( format_as<AccessorT>(AccessorT::access(v)));
-        }, *field);
-    }
+    ProtoMessageT::for_each_field([&]<typename FieldT>() {
+        field_values.push_back(format_as<FieldT>(FieldT::access(v)));
+    });
     return fmt::format("{{{}}}",fmt::join(field_values,","));
 }
 

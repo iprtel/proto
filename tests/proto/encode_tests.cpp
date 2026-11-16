@@ -1,11 +1,10 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
-#include "iprtl/proto/meta/encode.h"
+#include "iprtl/proto/meta/codec.h"
 #include <limits>
 
 
 using namespace iprtl::proto;
-using namespace iprtl::proto::meta;
 
 TEST(EncodeTest, encode_fixed) {
     std::array<uint8_t, 128> buffer{};
@@ -109,7 +108,7 @@ TEST(EncodeTest, encode_nested_field) {
     //   Nested test = 1;
     // }
     // {"test":{"a":1}} -> 0a020802 = 4
-    using Field = meta::ProtoField<struct TestNested, 1, nested_p<Proto_Nested>, "test", &TestNested::test>;
+    using Field = meta::ProtoField<struct TestNested, 1, meta::nested_p<Proto_Nested>, "test", &TestNested::test>;
 
     std::array<uint8_t, 128> buffer{};
     auto remaining = encode<Proto_Nested>(buffer, Nested{1});

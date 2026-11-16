@@ -2,7 +2,6 @@
 #include <array>
 #include <cstdint>
 #include <functional>
-#include <variant>
 
 #include "fixedstring.h"
 #include "iprtl/proto/wire/types.h"
@@ -35,7 +34,12 @@ struct ProtoMessage {
   static constexpr std::array<char,Name.size> name {Name.value};
   using cpp_type = ClassT;
   using message_type = ClassT;
-  using message_fields = std::variant<ProtoFields...>;
+
+  // Calls f.template operator()<Field>() for each field, in declaration order.
+  template<typename F>
+  static constexpr void for_each_field(F&& f) {
+    (f.template operator()<ProtoFields>(), ...);
+  }
 };
 
 // A field whose value is another message (length-delimited on the wire).
