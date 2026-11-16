@@ -123,7 +123,9 @@ struct codec<FieldT> {
         }
         return remaining;
     }
-    // Each record adds one element. Records with a different wire type throw wire_exception.
+    // Each record adds one element. A packable field also accepts a packed (len_data)
+    // record and appends all of its elements, as the encoding spec requires.
+    // Any other wire type throws wire_exception.
     static void decode(value_type& object, wire::wire_value const& value) {
         using element_type = typename FieldT::proto_type::element_type;
         auto& elements = FieldT::access(object);
@@ -169,7 +171,8 @@ struct codec<FieldT> {
         return value_codec::encode(remaining, value);
     }
     // Each record appends its elements, so a list split over several records is joined.
-    // Records that are not len_data throw wire_exception.
+    // A single unpacked element is also accepted, as the encoding spec requires.
+    // Any other wire type throws wire_exception.
     static void decode(value_type& object, wire::wire_value const& value) {
         using element_type = typename FieldT::proto_type::element_type;
         auto& elements = FieldT::access(object);
