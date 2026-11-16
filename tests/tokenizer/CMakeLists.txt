@@ -1,0 +1,1 @@
+define_test(tokenizer_tests "tokenizer_tests.cpp;${SRC_DIR}/iprtl/proto/compiler/proto_tokenizer.cpp")

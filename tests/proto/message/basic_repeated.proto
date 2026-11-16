@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package tests;
+
+message BasicRepeated {
+  repeated sint32 a_repeated =  1[packed=false];
+  repeated string a_strings = 2;
+  repeated sint32 a_packed =  3; // [packed=true] is default
+}

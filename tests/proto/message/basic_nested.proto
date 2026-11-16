@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package tests;
+
+message Nested {
+    sint32 value = 1;
+}
+
+message BasicNested {
+  Nested nested = 1;
+}

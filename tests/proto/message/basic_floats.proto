@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package tests;
+
+message BasicFloats {
+  float a = 1;
+  double b = 2;
+}

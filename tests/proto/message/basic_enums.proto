@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package tests;
+
+enum Choice {
+  CHOICE_NONE = 0;
+  CHOICE_POSITIVE = 13;
+  CHOICE_NEGATIVE = -13;
+}
+
+message BasicEnums {
+    Choice choice = 1;
+}

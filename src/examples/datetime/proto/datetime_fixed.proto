@@ -1,0 +1,13 @@
+syntax = "proto3";
+package datetime_fixed;
+
+message Date {
+    fixed32 day   = 1;
+    fixed32 month = 2;
+    fixed32 year  = 3;
+}
+
+message DateTime {
+    Date date = 1;
+    sfixed32 seconds_from_noon = 2;
+}
