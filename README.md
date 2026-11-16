@@ -327,7 +327,23 @@ The build first compiles `protopiler`, then uses it to generate headers for the 
 
 ### Using it in your own CMake project
 
-The library is header-only. Add `src/` to your include path, link `{fmt}`, and run `protopiler` on your `.proto` files. See the `prepare_proto` macro in [src/examples/CMakeLists.txt](src/examples/CMakeLists.txt) for an example.
+The library itself is header-only; only `protopiler` is compiled. Add the project with `FetchContent` (or `add_subdirectory`) and let `protopiler_add_library` generate the headers for your `.proto` files:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  iprtl_proto
+  GIT_REPOSITORY https://github.com/iprtel/proto
+  GIT_TAG        main)   # better: a fixed commit or tag
+FetchContent_MakeAvailable(iprtl_proto)
+
+protopiler_add_library(my-protos proto/datetime.proto)
+
+add_executable(my-app main.cpp)
+target_link_libraries(my-app PRIVATE my-protos)
+```
+
+`my-protos` provides the generated `datetime.proto.h`, the library headers and `{fmt}`, and makes sure the header is generated before `my-app` is compiled. If you write the encoding by hand without generated headers, link `iprtl::proto` instead. Tests, examples and GoogleTest are only built when this project is the top-level project. [src/examples/datetime/CMakeLists.txt](src/examples/datetime/CMakeLists.txt) shows the same setup inside this repository.
 
 ---
 

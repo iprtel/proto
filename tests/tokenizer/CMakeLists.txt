@@ -1,1 +1,2 @@
-define_test(tokenizer_tests "tokenizer_tests.cpp;${SRC_DIR}/iprtl/proto/compiler/proto_tokenizer.cpp")
+define_test(tokenizer_tests tokenizer_tests.cpp)
+target_link_libraries(tokenizer_tests PRIVATE protopiler-frontend)
