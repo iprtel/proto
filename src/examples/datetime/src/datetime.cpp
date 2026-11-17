@@ -6,7 +6,6 @@
 
 datetime::DateTime now(){
     auto now = std::chrono::system_clock::now();
-    auto in_time_t = std::chrono::system_clock::to_time_t(now);
     auto today = std::chrono::floor<std::chrono::days>(now); // truncate to whole days
     std::chrono::year_month_day ymd{today};
     auto sec_from_noon = std::chrono::floor<std::chrono::seconds>(now - today) - std::chrono::seconds{86400/2};

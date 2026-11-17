@@ -16,7 +16,7 @@ enum class CheckResult {
 };
 
 inline std::tuple<std::span<const uint8_t>, CheckResult> is_correct_varint(std::span<const uint8_t> buffer)  {
-    for (auto i=0; i < 10; i++){
+    for (std::size_t i=0; i < 10; i++){
         if (buffer.size() <= i) {
             break;
         }

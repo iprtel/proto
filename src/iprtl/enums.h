@@ -39,7 +39,7 @@ namespace enums_detail{
 
     template<typename Function>
     constexpr void for_each(std::string_view args, Function func) {
-        for(auto index=0; index < args.size(); index++) {
+        for(std::size_t index=0; index < args.size(); index++) {
             index = skip_whitespace(args, index);
             auto start = index;
             while(index < args.size() && args[index] != ','){index++;}
@@ -73,7 +73,7 @@ namespace enums_detail{
         index = skip_whitespace(args,index);
         bool found_value = index < args.size() && args[index++] == '=';
         return {found_value, index};
-    } 
+    }
 
     constexpr auto read_value(std::string_view args, auto index){
         index = skip_whitespace(args,index);
@@ -92,12 +92,12 @@ namespace enums_detail{
     template<typename EnumEntry>
     constexpr EnumEntry read_entry(std::string_view args, auto numeric_value){
         using EnumType = decltype(EnumEntry::value);
-        auto stop = std::distance(args.begin(),
-                        std::ranges::find_if_not(args,is_idchar));
+        auto stop = static_cast<std::size_t>(std::distance(args.begin(),
+                        std::ranges::find_if_not(args,is_idchar)));
         auto [found_value, index] = has_value(args, stop);
         if (found_value){
             numeric_value = read_value(args,index);
-        } 
+        }
         return {EnumType{numeric_value}, args.substr(0,stop)};
     }
 
@@ -117,18 +117,6 @@ namespace enums_detail{
         for_each(args, read_name);
         return result;
     }
-
-    constexpr std::size_t get_names_length(std::string_view args) {
-        std::size_t total_length{0};
-        auto counter = [&](std::string_view arg){
-            total_length += std::distance(arg.begin(),
-                            std::ranges::find_if_not(args,is_idchar));
-            total_length++; // For the terminator
-        };
-        enums_detail::for_each(args, counter);
-        return total_length;
-    }
-
 
 }
 }

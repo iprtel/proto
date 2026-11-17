@@ -35,6 +35,7 @@ std::string map_cpp_type(std::string const& name) {
         case FieldType::Sfixed64: return "int64_t";
         case FieldType::Sint32: return "int32_t";
         case FieldType::Sint64: return "int64_t";
+        case FieldType::Name: break;
     }
     return name; // For Message, Enum we return the type name as is
 }
@@ -137,6 +138,7 @@ struct Generator{
             case FieldType::Sfixed64: return "iprtl::proto::sfixed64_p";
             case FieldType::Sint32: return "iprtl::proto::sint32_p";
             case FieldType::Sint64: return "iprtl::proto::sint64_p";
+            case FieldType::Name: break; // an enum or message, resolved below
         }
 
         auto found_enum = std::find_if(proto.enums.begin(), proto.enums.end(),
