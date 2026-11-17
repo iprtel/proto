@@ -37,8 +37,8 @@ struct codec<meta::ProtoMessage<ClassT, Name, Fields...>> {
             auto [remaining, record] = wire::read_record(buffer);
             buffer = remaining;
             // Hand the value to the first field with a matching number.
-            ((record.field_number == Fields::number
-                && (codec<Fields>::decode(message, record.value), true)) || ...);
+            static_cast<void>(((record.field_number == Fields::number
+                && (codec<Fields>::decode(message, record.value), true)) || ...));
         }
         return buffer;
     }

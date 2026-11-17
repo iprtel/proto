@@ -27,6 +27,7 @@ TEST_P(BasicIntsTest, decode_message) {
     const auto& param = GetParam();
     tests::BasicInts message{};
     auto remaining = decode_message(message, {param.encoded});
+    EXPECT_EQ(remaining.size(), 0) << fmt::format("{}", param.message);
     EXPECT_EQ(message, param.message) << fmt::format("{} != {}", message, param.message);
 }
 

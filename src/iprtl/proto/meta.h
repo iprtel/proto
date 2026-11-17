@@ -2,6 +2,7 @@
 
 // Entry point for generated code: whole-message encode/decode/length/compare/format.
 
+#include <cassert>
 #include <optional>
 #include <span>
 #include <vector>
@@ -24,6 +25,7 @@ std::vector<uint8_t> encode_message(typename MetaMessageT::message_type message)
     auto size = length<MetaMessageT>(message);
     std::vector<uint8_t> result(size);
     auto remaining = encode<MetaMessageT>(std::span(result), message);
+    assert(remaining.empty());
     return result;
 };
 template<typename MetaMessageT>

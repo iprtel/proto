@@ -92,10 +92,10 @@ concept is_encoded_len_data =
 
 template<typename ProtoT, typename EncodedT>
 concept is_encoding =
-    is_encoded_varint<ProtoT> && std::same_as<EncodedT, wire::varint> ||
-    is_encoded_i32<ProtoT> && std::same_as<EncodedT, wire::i32> ||
-    is_encoded_i64<ProtoT> && std::same_as<EncodedT, wire::i64> ||
-    is_encoded_len_data<ProtoT> && std::same_as<EncodedT, wire::len_data>;
+    (is_encoded_varint<ProtoT> && std::same_as<EncodedT, wire::varint>) ||
+    (is_encoded_i32<ProtoT> && std::same_as<EncodedT, wire::i32>) ||
+    (is_encoded_i64<ProtoT> && std::same_as<EncodedT, wire::i64>) ||
+    (is_encoded_len_data<ProtoT> && std::same_as<EncodedT, wire::len_data>);
 
 
 // Primary template: defaults to false
@@ -121,6 +121,6 @@ concept is_repeated_field = is_packed_p<ProtoT> || is_repeated_p<ProtoT>;
 
 template<typename ProtoT>
 concept is_packed_repeated = is_packed_p<ProtoT> ||
-                             is_repeated_p<ProtoT> && is_packable<typename ProtoT::element_type>;
+                             (is_repeated_p<ProtoT> && is_packable<typename ProtoT::element_type>);
 
 }
