@@ -222,15 +222,6 @@ requires is_encoded_varint<ProtoT>     // int32, int64, uint32, uint64, sint32, 
 struct codec<ProtoT> { ... };
 ```
 
-### Why a class template and not overloaded functions
-
-An earlier version used overloaded function templates (`length<T>`, `encode<T>`, `as<T>`) that were selected by concepts. That caused two problems:
-
-- **Name hiding.** Once message overloads moved into `namespace meta`, a call such as `length<P>(v)` inside `meta` found only `meta::length` and stopped looking, so the overloads in `proto` were invisible. Argument-dependent lookup did not help, because the arguments are `int` or user structs.
-- **Declaration order.** A field calls the nested-message overload, which calls the message overload, which calls the field overload again. With functions, each one has to be declared before it is used, which needed forward declarations and an include loop between `as.h` and `decode.h`.
-
-The compiler looks up class template specializations when the codec is *used*, which happens in user code after all headers are included. So `meta/` can add `codec<meta::nested_p<M>>` without `proto/` knowing about it, and the order of the specializations does not matter.
-
 ### Following one call
 
 Encoding a `DateTime`:
@@ -247,55 +238,6 @@ encode_message(dt)                                     generated, user namespace
       │              └─ wire::encode(buffer, varint)    wire/encode.h
       └─ codec<ProtoField<…, sint32_p, …>>              …
 ```
-
-### Adding a new type
-
-To support a new proto type, add a tag type and a `codec` specialization for it. For a single value, put both in `proto/`. For anything that needs to know about messages, put them in `meta/`. No existing code has to change.
-
----
-
-## Project layout
-
-```
-src/iprtl/
-├── enums.h, template_string.h      Helpers: reflective enums, compile-time strings
-└── proto/
-    ├── wire/                       iprtl::proto::wire: the raw wire format
-    │   ├── types.h                 varint, i32, i64, len_data, record, tag()
-    │   ├── read.h, write.h         read/write a single wire value or record
-    │   ├── encode.h, length.h      encode() / length() overloads for wire values
-    │   ├── is_correct_length.h     check a buffer before reading
-    │   └── wire_exception.h        thrown on malformed input
-    ├── proto_wire.h                umbrella header for the wire layer
-    │
-    ├── types.h                     iprtl::proto: proto type tags (int32_p, …, enum_p, repeated_p, packed_p)
-    ├── concepts.h                  groups of proto types (is_encoded_varint, is_packed_p, …)
-    ├── codec.h                     codec<T> declaration + length/encode/decode free functions
-    ├── scalar_codecs.h             codecs for scalars, enums, string and bytes
-    ├── packed_repeated_values.h    iterates over the elements of a packed field
-    ├── packed_codec.h              codec for packed_p<T>
-    ├── proto_exception.h           thrown on invalid messages
-    │
-    ├── meta/                       iprtl::proto::meta: messages and fields
-    │   ├── fixedstring.h           compile-time string used for names
-    │   ├── types.h                 ProtoMessage, ProtoField, nested_p
-    │   ├── concepts.h              is_proto_message_p, is_proto_field_p, is_nested_p
-    │   ├── codec.h                 codecs for messages, nested messages and fields
-    │   ├── equal.h                 field-wise comparison
-    │   └── types_format.h          {fmt} formatting of fields and messages
-    ├── meta.h                      entry point for generated code
-    │
-    ├── compiler/                   protopiler: tokenizer, parser, AST and C++ code generator
-    └── tools/                      wire-dump: prints the raw records of a binary message
-src/examples/datetime/              Example program using generated code
-tests/
-├── wire/                           wire layer
-├── proto/                          single-value codecs, fields and packed values
-├── proto/message/                  whole messages, using headers generated from .proto files
-├── tokenizer/, compiler/           protopiler front end
-```
-
----
 
 ## Building
 
